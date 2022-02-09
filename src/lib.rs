@@ -3,5 +3,8 @@
 
 pub(crate) mod readers;
 pub(crate) mod writers;
+pub(crate) mod functions;
 
 pub use writers::offset_writer::AsyncOffsetWriter;
+pub use readers::async_delimiter_reader::AsyncDelimiterReader;
+pub use functions::copy::{copy, SUGGESTED_BUFFER_SIZE};
