@@ -76,6 +76,8 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
             let actual_read_slice = &read_slice[self.delimiter.len()..];
             self.buffer.extend_from_slice(actual_read_slice);
 
+            b.set_filled(b.filled().len() - self.delimiter.len());
+
             self.matched = true;
             return Poll::Ready(Ok(()));
         }
