@@ -117,3 +117,38 @@ fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, b
 
     None
 }
+
+#[tokio::test]
+async fn foo_bar() {
+    use std::io::Cursor;
+    use tokio::io::AsyncReadExt;
+
+    let data = b"Foo. Bar. Foo. Foo. Bar. Foo. Bar.";
+    let delimiter = b"Bar.";
+
+    let cursor = Cursor::new(data);
+    let mut buffer = String::new();
+    let mut reader = AsyncDelimiterReader::new(cursor, delimiter);
+
+    reader.read_to_string(&mut buffer).await.expect("failed to read");
+    assert_eq!(buffer, "Foo. ");
+    assert!(reader.matched());
+    reader.reset();
+    buffer.clear();
+
+    reader.read_to_string(&mut buffer).await.expect("failed to read");
+    assert_eq!(buffer, " Foo. Foo. ");
+    assert!(reader.matched());
+    reader.reset();
+    buffer.clear();
+
+    reader.read_to_string(&mut buffer).await.expect("failed to read");
+    assert_eq!(buffer, " Foo. ");
+    assert!(reader.matched());
+    reader.reset();
+    buffer.clear();
+    
+    reader.read_to_string(&mut buffer).await.expect("failed to read");
+    assert_eq!(buffer, "");
+    assert!(!reader.matched());
+}
