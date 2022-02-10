@@ -6,6 +6,8 @@ use tokio::io::{AsyncRead, ReadBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+// TODO: Handle buffer boundary (ie. a delimiter split over two separate calls to poll_read()).
+
 /// A wrapper around an [`AsyncRead`] implementation that allows matching of a multi-byte delimiter.
 ///
 /// Whilst the matched state of this wrapper is true, [`Self::poll_read()`] will return `Poll::Ready(Ok(()))`,
@@ -25,6 +27,10 @@ impl<R: AsyncRead + Unpin> AsyncDelimiterReader <R> {
 
     /// Constructs a new wrapper from an inner [`AsyncRead`] implementation and a byte vector delimiter.
     pub fn with_owned_delimiter(inner: R, delimiter: Vec<u8>) -> Self {
+        if delimiter.len() == 0 {
+            panic!("Delimiter byte length must be non-zero.");
+        }
+
         Self {
             inner,
             buffer: Vec::new(),
@@ -76,6 +82,7 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
             let actual_read_slice = &read_slice[self.delimiter.len()..];
             self.buffer.extend_from_slice(actual_read_slice);
 
+            // TODO: This needs to also negate any data found after the delimiter.
             b.set_filled(b.filled().len() - self.delimiter.len());
 
             self.matched = true;
@@ -87,10 +94,15 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
 }
 
 fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, buf: &[u8]) -> bool {
-    // A naive linear search along the buffer for the specified delimiter.
-    // TODO: Look at tokio's implementation for single byte delimiters for improvements?
+    // A naive linear search along the buffer for the specified delimiter. This is already surprisingly performant.
+    // 
+    // For instance, using memchr::memchr() to match for the first byte of the delimiter, and then manual byte
+    // comparisons for the remaining delimiter bytes was actually slower by a factor of 2.25. This method was explored
+    // as tokio's `read_until()` implementation uses memchr::memchr(). Please submit an issue or PR if you know of
+    // a better algorithm for this delimiter matching (and have tested/verified its performance).
+
     'outer: for index in 0..buf.len() {
-        if index + reader.delimiter.len() < buf.len() { 
+        if index + reader.delimiter.len() >= buf.len() { 
             break;
         }
 
