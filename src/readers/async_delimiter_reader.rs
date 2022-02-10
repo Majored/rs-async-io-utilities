@@ -6,8 +6,6 @@ use tokio::io::{AsyncRead, ReadBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-// TODO: Handle buffer boundary (ie. a delimiter split over two separate calls to poll_read()).
-
 /// A wrapper around an [`AsyncRead`] implementation that allows matching of a multi-byte delimiter.
 ///
 /// Whilst the matched state of this wrapper is true, [`Self::poll_read()`] will return `Poll::Ready(Ok(()))`,
@@ -78,21 +76,23 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
 
         let read_slice = &b.filled()[prev_len..new_len];
 
-        if let Some(first_byte_match_index) = match_delimiter(&mut self, read_slice) {
-            let actual_read_slice = &read_slice[first_byte_match_index + self.delimiter.len()..];
+        if let Some((full_match, match_index)) = match_delimiter(&mut self, read_slice) {
+            let actual_read_slice = &read_slice[match_index + self.delimiter.len()..];
             self.buffer.extend_from_slice(actual_read_slice);
 
-            b.set_filled(first_byte_match_index);
+            b.set_filled(match_index);
 
-            self.matched = true;
-            return Poll::Ready(Ok(()));
+            if full_match {
+                self.matched = true;
+                return Poll::Ready(Ok(()));
+            }
         }
 
         poll
     }
 }
 
-fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, buf: &[u8]) -> Option<usize> {
+fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, buf: &[u8]) -> Option<(bool, usize)> {
     // A naive linear search along the buffer for the specified delimiter. This is already surprisingly performant.
     // 
     // For instance, using memchr::memchr() to match for the first byte of the delimiter, and then manual byte
@@ -101,17 +101,18 @@ fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, b
     // a better algorithm for this delimiter matching (and have tested/verified its performance).
 
     'outer: for index in 0..buf.len() {
-        if index + reader.delimiter.len() >= buf.len() { 
-            break;
-        }
-
         for (delim_index, delim_byte) in reader.delimiter.iter().enumerate() {
+            if index + delim_index >= buf.len() && delim_index != 0 { 
+                // We have a partial match but have hit the end of the buffer.
+                return Some((false, index));
+            }
+
             if buf[index + delim_index] != *delim_byte {
                 continue 'outer;
             }
         }
 
-        return Some(index);
+        return Some((true, index));
     }
 
     None
