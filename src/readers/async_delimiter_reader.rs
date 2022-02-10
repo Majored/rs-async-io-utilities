@@ -78,12 +78,11 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
 
         let read_slice = &b.filled()[prev_len..new_len];
 
-        if match_delimiter(&mut self, read_slice) {
-            let actual_read_slice = &read_slice[self.delimiter.len()..];
+        if let Some(first_byte_match_index) = match_delimiter(&mut self, read_slice) {
+            let actual_read_slice = &read_slice[first_byte_match_index + self.delimiter.len()..];
             self.buffer.extend_from_slice(actual_read_slice);
 
-            // TODO: This needs to also negate any data found after the delimiter.
-            b.set_filled(b.filled().len() - self.delimiter.len());
+            b.set_filled(first_byte_match_index);
 
             self.matched = true;
             return Poll::Ready(Ok(()));
@@ -93,7 +92,7 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
     }
 }
 
-fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, buf: &[u8]) -> bool {
+fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, buf: &[u8]) -> Option<usize> {
     // A naive linear search along the buffer for the specified delimiter. This is already surprisingly performant.
     // 
     // For instance, using memchr::memchr() to match for the first byte of the delimiter, and then manual byte
@@ -112,8 +111,8 @@ fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, b
             }
         }
 
-        return true;
+        return Some(index);
     }
 
-    false
+    None
 }
