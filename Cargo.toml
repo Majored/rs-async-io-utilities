@@ -1,6 +1,6 @@
 [package]
 name = "async_io_utilities"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Harry [hello@majored.pw]"]
 repository = "https://github.com/Majored/rs-async-io-utilities"
