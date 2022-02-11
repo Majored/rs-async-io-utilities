@@ -66,3 +66,21 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for AsyncOffsetWriter<W> {
         self.inner.is_write_vectored()
     }
 }
+
+#[tokio::test]
+async fn basic() {
+    use std::io::Cursor;
+    use tokio::io::AsyncWriteExt;
+
+    let mut writer = AsyncOffsetWriter::new(Cursor::new(Vec::new()));
+    assert_eq!(writer.offset(), 0);
+
+    writer.write_all(b"Foo. Bar. Foo. Bar.").await.expect("failed to write data");
+    assert_eq!(writer.offset(), 19);
+
+    writer.write_all(b"Foo. Foo.").await.expect("failed to write data");
+    assert_eq!(writer.offset(), 28);
+
+    writer.write_all(b"Bar. Bar.").await.expect("failed to write data");
+    assert_eq!(writer.offset(), 37);
+}
