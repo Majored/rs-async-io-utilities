@@ -59,16 +59,7 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
             return Poll::Ready(Ok(()));
         }
 
-        let prev_len = b.filled().len();
-
-        // Append the local buffer first if it's not empty.
-        if !self.buffer.is_empty() {
-            b.put_slice(&self.buffer);
-            self.buffer.clear();
-        }
-
-        let poll = Pin::new(&mut self.inner).poll_read(c, b);
-        let new_len = b.filled().len();
+        let (prev_len, new_len, poll) = fill_buffer(&mut self, c, b);
 
         if new_len - prev_len == 0 {
             return poll;
@@ -90,6 +81,23 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
 
         poll
     }
+}
+
+fn fill_buffer<W: AsyncRead + Unpin>(
+    reader: &mut Pin<&mut AsyncDelimiterReader<W>>, c: &mut Context<'_>, b: &mut ReadBuf<'_>
+) -> (usize, usize, Poll<tokio::io::Result<()>>) {
+    let prev_len = b.filled().len();
+
+    // Append the local buffer first if it's not empty.
+    if !reader.buffer.is_empty() {
+        b.put_slice(&reader.buffer);
+        reader.buffer.clear();
+    }
+
+    let poll = Pin::new(&mut reader.inner).poll_read(c, b);
+    let new_len = b.filled().len();
+
+    (prev_len, new_len, poll)
 }
 
 fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, buf: &[u8]) -> Option<(bool, usize)> {

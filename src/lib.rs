@@ -13,5 +13,8 @@ pub(crate) mod writers;
 pub(crate) mod functions;
 
 pub use writers::offset_writer::AsyncOffsetWriter;
-pub use readers::async_delimiter_reader::AsyncDelimiterReader;
+
+pub use readers::delimiter_reader::AsyncDelimiterReader;
+pub use readers::prepend_reader::AsyncPrependReader;
+
 pub use functions::copy::{copy, SUGGESTED_BUFFER_SIZE};
