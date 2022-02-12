@@ -3,3 +3,4 @@
 
 pub(crate) mod delimiter_reader;
 pub(crate) mod prepend_reader;
+pub(crate) mod append_reader;
