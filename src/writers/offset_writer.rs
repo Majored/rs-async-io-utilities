@@ -67,6 +67,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for AsyncOffsetWriter<W> {
     }
 }
 
+#[cfg(test)]
 #[tokio::test]
 async fn basic() {
     use std::io::Cursor;

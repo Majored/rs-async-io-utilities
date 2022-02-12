@@ -7,7 +7,7 @@
 //! TODO
 //!
 //! [Read more.](https://github.com/Majored/rs-async-io-utilities)
- 
+
 pub(crate) mod readers;
 pub(crate) mod writers;
 pub(crate) mod functions;
@@ -16,5 +16,6 @@ pub use writers::offset_writer::AsyncOffsetWriter;
 
 pub use readers::delimiter_reader::AsyncDelimiterReader;
 pub use readers::prepend_reader::AsyncPrependReader;
+pub use readers::append_reader::AsyncAppendReader;
 
 pub use functions::copy::{copy, SUGGESTED_BUFFER_SIZE};

@@ -6,14 +6,14 @@ use tokio::io::{AsyncRead, ReadBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-// A wrapper around an [`AsyncRead`] implementation that allows prepending bytes from a buffer during reads.
+/// A wrapper around an [`AsyncRead`] implementation that allows prepending bytes from a buffer during reads.
 pub struct AsyncPrependReader<R: AsyncRead + Unpin> {
     inner: R,
     buffer: Vec<u8>,
 }
 
 impl<R: AsyncRead + Unpin> AsyncPrependReader<R> {
-    /// Constructs a new wrapper from an inner [`AsyncRead`] implementation and a byte slice delimiter.
+    /// Constructs a new wrapper from an inner [`AsyncRead`] implementation.
     pub fn new(inner: R) -> Self {
         Self { inner, buffer: Vec::new() }
     }
@@ -62,6 +62,7 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncPrependReader<R> {
     }
 }
 
+#[cfg(test)]
 #[tokio::test]
 async fn prepend_only() {
     use std::io::Cursor;

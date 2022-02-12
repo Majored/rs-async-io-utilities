@@ -119,6 +119,7 @@ fn match_delimiter<W: AsyncRead + Unpin>(reader: &mut AsyncDelimiterReader<W>, b
     None
 }
 
+#[cfg(test)]
 #[tokio::test]
 async fn foo_bar() {
     use std::io::Cursor;
