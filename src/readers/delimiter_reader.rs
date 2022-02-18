@@ -51,6 +51,11 @@ impl<R: AsyncRead + Unpin> AsyncDelimiterReader <R> {
         self.inner.into_inner()
     }
 
+    /// Returns a mutable reference to the inner reader.
+    pub fn get_mut(&mut self) -> &mut R {
+        self.inner.get_mut()
+    }
+
     /// Returns a shared reference to the inner buffer.
     pub fn buffer(&self) -> &[u8] {
         self.inner.buffer()

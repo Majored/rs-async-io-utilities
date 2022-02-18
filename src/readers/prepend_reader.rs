@@ -37,6 +37,11 @@ impl<R: AsyncRead + Unpin> AsyncPrependReader<R> {
     pub fn into_inner(self) -> R {
         self.inner
     }
+
+    /// Returns a mutable reference to the inner reader.
+    pub fn get_mut(&mut self) -> &mut R {
+        &mut self.inner
+    }
 }
 
 impl<R: AsyncRead + Unpin> AsyncRead for AsyncPrependReader<R> {
