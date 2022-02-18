@@ -50,6 +50,11 @@ impl<R: AsyncRead + Unpin> AsyncDelimiterReader <R> {
     pub fn into_inner(self) -> R {
         self.inner.into_inner()
     }
+
+    /// Returns a shared reference to the inner buffer.
+    pub fn buffer(&self) -> &[u8] {
+        self.inner.buffer()
+    }
 }
 
 impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
