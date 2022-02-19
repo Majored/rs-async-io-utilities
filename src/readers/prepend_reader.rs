@@ -49,8 +49,9 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncPrependReader<R> {
         let buffer_filled = !self.buffer.is_empty();
 
         if buffer_filled {
-            buf.put_slice(&self.buffer);
-            self.buffer.clear();
+            let end_index = std::cmp::min(self.buffer.len(), buf.remaining());
+            buf.put_slice(&self.buffer[..end_index]);
+            self.buffer = self.buffer.split_off(end_index);
         }
     
         let poll = Pin::new(&mut self.inner).poll_read(c, buf);
