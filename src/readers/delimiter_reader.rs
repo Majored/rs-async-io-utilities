@@ -77,10 +77,13 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
         let read_slice = &b.filled()[prev_len..new_len];
 
         if let Some((full_match, match_index)) = match_delimiter(&mut self, read_slice) {
-            let actual_read_slice = &read_slice[match_index + self.delimiter.len()..];
-            self.inner.prepend(actual_read_slice);
-
-            b.set_filled(match_index);
+            let read_slice_len = read_slice.len();
+            let index = match_index + self.delimiter.len();
+            if read_slice_len >= index {
+                let actual_read_slice = &read_slice[index..];
+                self.inner.prepend(actual_read_slice);
+                b.set_filled(match_index);
+            }
 
             if full_match {
                 self.matched = true;
