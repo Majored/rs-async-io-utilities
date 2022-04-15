@@ -13,7 +13,7 @@ TODO
 
 ```toml
 [dependencies]
-async_io_utilities = "0.1.1"
+async_io_utilities = "0.1.2"
 ```
 
 ## Issues & Support
