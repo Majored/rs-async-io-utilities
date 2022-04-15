@@ -18,4 +18,4 @@ pub use readers::delimiter_reader::AsyncDelimiterReader;
 pub use readers::prepend_reader::AsyncPrependReader;
 pub use readers::append_reader::AsyncAppendReader;
 
-pub use functions::copy::{copy, SUGGESTED_BUFFER_SIZE};
+pub use functions::copy::{copy, read_string, read_bytes, SUGGESTED_BUFFER_SIZE};
