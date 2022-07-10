@@ -83,6 +83,10 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
                 let actual_read_slice = &read_slice[index..];
                 self.inner.prepend(actual_read_slice);
                 b.set_filled(match_index);
+            } else if !full_match {
+                let pp = &read_slice[match_index..];
+                self.inner.prepend(pp);
+                b.set_filled(match_index);
             }
 
             if full_match {
