@@ -59,12 +59,8 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncPrependReader<R> {
         if let Poll::Ready(Err(_)) = &poll {
             return poll;
         } 
-        
-        if buffer_filled {
-            Poll::Ready(Ok(()))
-        } else {
-            poll
-        }
+
+        poll
     }
 }
 
