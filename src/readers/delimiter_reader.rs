@@ -84,9 +84,14 @@ impl<R: AsyncRead + Unpin> AsyncRead for AsyncDelimiterReader <R> {
                 self.inner.prepend(actual_read_slice);
                 b.set_filled(match_index);
             } else if !full_match {
-                let pp = &read_slice[match_index..];
-                self.inner.prepend(pp);
+                let partial_delimiter = &read_slice[match_index..];
+                self.inner.prepend(partial_delimiter);
                 b.set_filled(match_index);
+
+                if match_index == 0 {
+                    c.waker().wake_by_ref();
+                    return Poll::Pending;
+                }
             }
 
             if full_match {
